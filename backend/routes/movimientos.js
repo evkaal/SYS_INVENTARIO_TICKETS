@@ -4,7 +4,9 @@ const Movimiento = require('../models/Movimiento');
 const Consumible = require('../models/Consumible');
 const Dispositivo = require('../models/Dispositivo');
 
-// Registrar movimiento. Solo se permiten Entrada y Salida.
+const normalizar = (value) => String(value || '').trim().replace(/\s+/g, ' ');
+
+// Registrar movimiento. En esta sección solo se permiten Entrada y Salida.
 router.post('/', async (req, res) => {
   try {
     const {
@@ -15,6 +17,7 @@ router.post('/', async (req, res) => {
       tipo,
       cantidad,
       lugar,
+      departamento,
       motivo,
       vale,
       ticketId,
@@ -30,11 +33,11 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'La cantidad debe ser mayor a 0' });
     }
 
-    let nombreFinal = materialNombre;
-    let marcaFinal = marca || '';
+    const lugarFinal = normalizar(lugar || departamento);
+    let nombreFinal = normalizar(materialNombre);
+    let marcaFinal = normalizar(marca);
     let tipoMaterial = '';
 
-    // Consumible
     if (materialId) {
       const consumible = await Consumible.findById(materialId);
       if (!consumible) return res.status(404).json({ error: 'Consumible no encontrado' });
@@ -53,16 +56,20 @@ router.post('/', async (req, res) => {
       tipoMaterial = 'consumible';
     }
 
-    // Dispositivo
     if (dispositivoId) {
       const dispositivo = await Dispositivo.findById(dispositivoId);
       if (!dispositivo) return res.status(404).json({ error: 'Dispositivo no encontrado' });
 
+      if (cantidadMovimiento !== 1) {
+        return res.status(400).json({ error: 'Para dispositivos la cantidad debe ser 1' });
+      }
+
       if (tipo === 'Salida') {
-        dispositivo.estadoActual = 'Prestado';
+        dispositivo.estadoActual = 'Ocupado';
         dispositivo.fechaSalida = new Date();
-        dispositivo.ubicacionActual = lugar || dispositivo.ubicacionActual;
-        dispositivo.vale = vale || dispositivo.vale;
+        dispositivo.ubicacionActual = lugarFinal || dispositivo.ubicacionActual || dispositivo.departamento || '';
+        dispositivo.departamento = dispositivo.ubicacionActual;
+        dispositivo.vale = normalizar(vale || dispositivo.vale);
       }
 
       if (tipo === 'Entrada') {
@@ -89,10 +96,11 @@ router.post('/', async (req, res) => {
       marca: marcaFinal,
       tipo,
       cantidad: cantidadMovimiento,
-      lugar: lugar || '',
-      observacionesEntrada: tipo === 'Entrada' ? (motivo || '') : '',
-      observacionesSalida: tipo === 'Salida' ? (motivo || '') : '',
-      vale: vale || '',
+      lugar: lugarFinal,
+      departamento: lugarFinal,
+      observacionesEntrada: tipo === 'Entrada' ? normalizar(motivo) : '',
+      observacionesSalida: tipo === 'Salida' ? normalizar(motivo) : '',
+      vale: normalizar(vale),
       ticketId: ticketId || null,
       tecnico: tecnico || null,
       fechaEntrada: tipo === 'Entrada' ? new Date() : null,
@@ -103,14 +111,15 @@ router.post('/', async (req, res) => {
     await movimiento.save();
     res.status(201).json({ message: 'Movimiento registrado', movimiento });
   } catch (error) {
+    console.error('Error registrando movimiento:', error);
     res.status(400).json({ error: error.message });
   }
 });
 
-// Obtener todos los movimientos
+// Obtener todos los movimientos. Se muestran solo Entrada y Salida para evitar confusión con préstamos.
 router.get('/', async (req, res) => {
   try {
-    const movimientos = await Movimiento.find()
+    const movimientos = await Movimiento.find({ tipo: { $in: ['Entrada', 'Salida'] } })
       .populate('materialId')
       .populate('dispositivoId')
       .sort({ fecha: -1, createdAt: -1 });

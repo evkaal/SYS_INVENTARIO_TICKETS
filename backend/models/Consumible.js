@@ -16,12 +16,14 @@ const consumibleSchema = new mongoose.Schema({
   fecha: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-consumibleSchema.pre('validate', function(next) {
+consumibleSchema.pre('validate', function() {
   this.nombre = normalizeText(this.nombre);
   this.categoria = normalizeText(this.categoria);
-  this.unidad = normalizeText(this.unidad);
+  this.unidad = normalizeText(this.unidad || 'piezas');
+  this.descripcion = normalizeText(this.descripcion);
+  this.marca = normalizeText(this.marca);
+  this.ubicacionActual = normalizeText(this.ubicacionActual);
   this.nombreKey = toKey(this.nombre);
-  next();
 });
 
 module.exports = mongoose.model('Consumible', consumibleSchema);

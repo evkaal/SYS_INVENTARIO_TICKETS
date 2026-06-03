@@ -8,12 +8,13 @@ const movimientoSchema = new mongoose.Schema({
   marca: { type: String, default: '', trim: true },
   tipo: {
     type: String,
-    enum: ['Entrada', 'Salida'],
+    enum: ['Entrada', 'Salida', 'Prestamo', 'Devolucion'],
     required: true
   },
   cantidad: { type: Number, default: 1, min: 1 },
   responsable: { type: String, default: '', trim: true },
   lugar: { type: String, default: '', trim: true },
+  departamento: { type: String, default: '', trim: true },
   estadoMaterial: { type: String, default: 'Buen estado', trim: true },
   observacionesSalida: { type: String, default: '', trim: true },
   observacionesEntrada: { type: String, default: '', trim: true },
