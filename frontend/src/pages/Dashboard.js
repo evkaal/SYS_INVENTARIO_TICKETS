@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   CubeIcon, 
   ShoppingCartIcon, 
-  TicketIcon, 
   ExclamationTriangleIcon,
   ArrowTrendingUpIcon,
   CheckCircleIcon,
@@ -11,7 +10,6 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
   ClipboardDocumentIcon,
-  ArrowUturnLeftIcon
 } from '@heroicons/react/24/outline';
 import { consumiblesService } from '../services/consumiblesService';
 import { dispositivosService } from '../services/dispositivosService';
@@ -55,7 +53,7 @@ const Dashboard = () => {
       ]);
 
       const stockTotal = consumibles.reduce((sum, c) => sum + c.stock, 0);
-      const criticos = consumibles.filter(c => c.stock <= c.stockMinimo && c.stock > 0);
+      const criticos = consumibles.filter(c => c.stock > 0 && c.stock <= 5);
       const sinStock = consumibles.filter(c => c.stock === 0);
       const prestados = dispositivos.filter(d => d.estadoActual === 'Prestado');
 
@@ -70,7 +68,7 @@ const Dashboard = () => {
       setConsumiblesCriticos([...criticos, ...sinStock]);
       setDispositivosPrestados(prestados);
       
-      // Procesar movimientos recientes para mostrar correctamente Préstamos y Devoluciones
+      // Procesar movimientos recientes. En movimientos solo se manejan Entrada y Salida
       const recientes = movimientos.slice(0, 6).map(mov => {
         let fechaValida = null;
         let fechaTexto = '';
@@ -98,16 +96,6 @@ const Dashboard = () => {
             IconoMostrar = ArrowDownIcon;
             colorMostrar = 'text-red-600 bg-red-50';
             break;
-          case 'Prestamo':
-            tipoMostrar = 'Préstamo';
-            IconoMostrar = ClipboardDocumentIcon;
-            colorMostrar = 'text-yellow-600 bg-yellow-50';
-            break;
-          case 'Devolucion':
-            tipoMostrar = 'Devolución';
-            IconoMostrar = ArrowUturnLeftIcon;
-            colorMostrar = 'text-blue-600 bg-blue-50';
-            break;
           default:
             tipoMostrar = mov.tipo || 'Movimiento';
             IconoMostrar = ArrowTrendingUpIcon;
@@ -122,7 +110,7 @@ const Dashboard = () => {
           Icono: IconoMostrar,
           color: colorMostrar,
           cantidad: mov.cantidad,
-          motivo: mov.motivo,
+          motivo: mov.observacionesEntrada || mov.observacionesSalida || '',
           fecha: fechaTexto,
           fechaValida: fechaValida,
           ticketId: mov.ticketId,
@@ -313,7 +301,7 @@ const Dashboard = () => {
                   <ShoppingCartIcon className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                 </div>
                 <p className="text-sm font-medium text-gray-700">Sin movimientos</p>
-                <p className="text-xs text-gray-400 mt-1">Registra entradas, salidas o préstamos</p>
+                <p className="text-xs text-gray-400 mt-1">Registra entradas o salidas</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -348,9 +336,7 @@ const Dashboard = () => {
                     <div className="text-right ml-2">
                       <p className={`text-sm font-bold ${
                         mov.tipo === 'Entrada' ? 'text-green-600' : 
-                        mov.tipo === 'Salida' ? 'text-red-600' : 
-                        mov.tipo === 'Prestamo' ? 'text-yellow-600' :
-                        mov.tipo === 'Devolucion' ? 'text-blue-600' : 'text-gray-600'
+                        mov.tipo === 'Salida' ? 'text-red-600' : 'text-gray-600'
                       }`}>
                         {mov.tipo === 'Entrada' ? '+' : ''}{mov.cantidad}
                       </p>

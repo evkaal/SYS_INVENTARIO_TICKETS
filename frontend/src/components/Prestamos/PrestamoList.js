@@ -71,7 +71,7 @@ const PrestamoList = ({ onRefresh }) => {
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
-          placeholder="Buscar por material, autorizo, lugar..."
+          placeholder="Buscar por material, autoriza, lugar o técnico..."
           className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -84,8 +84,8 @@ const PrestamoList = ({ onRefresh }) => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Material</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Autorizo</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lugar/Depto</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Autoriza</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lugar/Área</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado Material</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha salida</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
@@ -146,7 +146,7 @@ const PrestamoList = ({ onRefresh }) => {
             <div className="p-5 space-y-4">
               <div className="bg-gray-50 p-3 rounded-lg">
                 <p className="text-sm font-medium">Material: {selectedPrestamo.materialNombre}</p>
-                <p className="text-sm">Autorizo: {selectedPrestamo.responsable || selectedPrestamo.autorizo}</p>
+                <p className="text-sm">Autoriza: {selectedPrestamo.responsable || selectedPrestamo.autorizo}</p>
                 <p className="text-sm">Fecha salida: {new Date(selectedPrestamo.fechaSalida).toLocaleString()}</p>
               </div>
               

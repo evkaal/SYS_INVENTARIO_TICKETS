@@ -57,10 +57,12 @@ router.post('/webhook', async (req, res) => {
         marca: consumible.marca || '',
         tipo: 'Salida',
         cantidad: item.cantidad,
-        motivo: `Consumo para ticket ${ticket_id}`,
+        tipoMaterial: 'consumible',
+        observacionesSalida: `Consumo para ticket ${ticket_id}`,
         ticketId: ticket_id,
         tecnico: tecnico || 'Sistema',
-        departamento: ''
+        fechaSalida: new Date(),
+        fecha: new Date()
       });
       
       await movimiento.save();

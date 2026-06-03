@@ -8,7 +8,6 @@ import {
   ClipboardIcon,
   TicketIcon,
   ClockIcon,
-  ChartBarIcon,
   Cog6ToothIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
@@ -18,23 +17,22 @@ const navigation = [
   { name: 'Consumibles', path: '/consumibles', icon: CubeIcon },
   { name: 'Dispositivos', path: '/dispositivos', icon: ComputerDesktopIcon },
   { name: 'Movimientos', path: '/movimientos', icon: ArrowsRightLeftIcon },
-  { name: 'Préstamos', path: '/prestamos', icon: ClipboardIcon },      // ← NUEVO
+  { name: 'Préstamos', path: '/prestamos', icon: ClipboardIcon },
   { name: 'Tickets', path: '/tickets', icon: TicketIcon },
   { name: 'Historial', path: '/historial', icon: ClockIcon },
-  { name: 'Reportes', path: '/reportes', icon: ChartBarIcon },
 ];
 
 const Sidebar = ({ isOpen, onClose }) => {
   return (
     <>
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden transition-opacity duration-300"
           onClick={onClose}
         />
       )}
-      
-      <aside 
+
+      <aside
         className={`
           fixed left-0 top-0 z-40 h-screen bg-white shadow-xl transition-transform duration-300 ease-in-out overflow-y-auto
           lg:translate-x-0 lg:static lg:z-auto lg:shadow-none lg:w-64
@@ -54,6 +52,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <p className="text-xs text-gray-500">Sistema v2.0</p>
               </div>
             </div>
+
             <button
               onClick={onClose}
               className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors lg:hidden"
@@ -61,7 +60,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               <XMarkIcon className="w-4 h-4" />
             </button>
           </div>
-          
+
           <nav className="flex-1 px-3 py-4 overflow-y-auto">
             <ul className="space-y-1">
               {navigation.map((item) => (
@@ -88,7 +87,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               ))}
             </ul>
           </nav>
-          
+
           <div className="p-4 border-t border-gray-200 bg-gray-50">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">

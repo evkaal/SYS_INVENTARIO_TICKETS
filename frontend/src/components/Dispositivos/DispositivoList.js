@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { MagnifyingGlassIcon, TrashIcon, PencilIcon, ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useState } from 'react';
+import { ArrowsRightLeftIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { dispositivosService } from '../../services/dispositivosService';
 import { useNotification } from '../../context/NotificationContext';
 import ConfirmDialog from '../UI/ConfirmDialog';
@@ -15,67 +15,69 @@ const DispositivoList = ({ onRefresh, onEdit, onMovimiento }) => {
     dispositivoNombre: null
   });
 
-  useEffect(() => {
-    cargarDispositivos();
-  }, []);
-
   const cargarDispositivos = async () => {
     try {
       setLoading(true);
       const data = await dispositivosService.getDispositivos();
       setDispositivos(data);
-    } catch (err) {
-      console.error(err);
-      if (showNotification) {
-        showNotification('Error al cargar dispositivos', 'error');
-      }
+    } catch (error) {
+      console.error(error);
+      showNotification('Error al cargar dispositivos', 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    cargarDispositivos();
+  }, []);
+
   const handleDeleteClick = (id, nombre) => {
-    setConfirmDialog({
-      isOpen: true,
-      dispositivoId: id,
-      dispositivoNombre: nombre
-    });
+    setConfirmDialog({ isOpen: true, dispositivoId: id, dispositivoNombre: nombre });
   };
 
   const handleDeleteConfirm = async () => {
     const { dispositivoId, dispositivoNombre } = confirmDialog;
     try {
       await dispositivosService.deleteDispositivo(dispositivoId);
-      if (showNotification) {
-        showNotification(`Dispositivo "${dispositivoNombre}" eliminado`, 'success');
-      }
+      showNotification(`Dispositivo "${dispositivoNombre}" eliminado`, 'success');
       await cargarDispositivos();
       if (onRefresh) onRefresh();
-    } catch (err) {
-      if (showNotification) {
-        showNotification('Error al eliminar dispositivo', 'error');
-      }
+    } catch (error) {
+      console.error(error);
+      showNotification(error.response?.data?.error || 'Error al eliminar dispositivo', 'error');
     } finally {
       setConfirmDialog({ isOpen: false, dispositivoId: null, dispositivoNombre: null });
     }
   };
 
   const getEstadoClass = (estado) => {
-    switch(estado) {
+    switch (estado) {
       case 'Disponible': return 'bg-green-100 text-green-800';
-      case 'Ocupado': return 'bg-red-100 text-red-800';
       case 'Prestado': return 'bg-yellow-100 text-yellow-800';
-      case 'No encontrado': return 'bg-gray-100 text-gray-800';
+      case 'Baja': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const filteredDispositivos = dispositivos.filter(d =>
-    d.numeroDeInventario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.tipo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.modelo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.marca?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.numeroSerie?.toLowerCase().includes(searchTerm.toLowerCase())
+  const getCondicionClass = (condicion) => {
+    switch (condicion) {
+      case 'En funcionamiento': return 'bg-green-100 text-green-800';
+      case 'No funciona': return 'bg-red-100 text-red-800';
+      case 'En reparación': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const term = searchTerm.toLowerCase();
+  const filteredDispositivos = dispositivos.filter(item =>
+    item.numeroDeInventario?.toLowerCase().includes(term) ||
+    item.tipo?.toLowerCase().includes(term) ||
+    item.modelo?.toLowerCase().includes(term) ||
+    item.marca?.toLowerCase().includes(term) ||
+    item.numeroSerie?.toLowerCase().includes(term) ||
+    item.condicion?.toLowerCase().includes(term) ||
+    item.ubicacionActual?.toLowerCase().includes(term)
   );
 
   if (loading) {
@@ -92,13 +94,13 @@ const DispositivoList = ({ onRefresh, onEdit, onMovimiento }) => {
         <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
-          placeholder="Buscar por inventario, tipo, modelo, marca o serie..."
+          placeholder="Buscar por inventario, tipo, modelo, marca, serie, condición o ubicación..."
           className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(event) => setSearchTerm(event.target.value)}
         />
       </div>
-      
+
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -107,20 +109,22 @@ const DispositivoList = ({ onRefresh, onEdit, onMovimiento }) => {
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Modelo</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marca</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">No. Serie</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Serie</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Disponibilidad</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Condición</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ubicación</th>
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredDispositivos.length === 0 ? (
               <tr>
-                <td colSpan="7" className="px-4 py-12 text-center text-sm text-gray-500">
+                <td colSpan="9" className="px-4 py-12 text-center text-sm text-gray-500">
                   No hay dispositivos registrados
                 </td>
               </tr>
             ) : (
-              filteredDispositivos.map((dispositivo) => (
+              filteredDispositivos.map(dispositivo => (
                 <tr key={dispositivo._id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 text-sm font-medium text-gray-900">{dispositivo.numeroDeInventario}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{dispositivo.tipo}</td>
@@ -129,15 +133,20 @@ const DispositivoList = ({ onRefresh, onEdit, onMovimiento }) => {
                   <td className="px-4 py-3 text-sm text-gray-600">{dispositivo.numeroSerie}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getEstadoClass(dispositivo.estadoActual)}`}>
-                      {dispositivo.estadoActual}
+                      {dispositivo.estadoActual || 'Disponible'}
                     </span>
                   </td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getCondicionClass(dispositivo.condicion)}`}>
+                      {dispositivo.condicion || 'En funcionamiento'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{dispositivo.ubicacionActual || '-'}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => onMovimiento && onMovimiento(dispositivo)}
                         className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                        title="Registrar movimiento"
                       >
                         <ArrowsRightLeftIcon className="w-3.5 h-3.5" />
                         Movimiento

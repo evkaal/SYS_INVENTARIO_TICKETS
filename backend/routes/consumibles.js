@@ -2,6 +2,23 @@ const express = require('express');
 const router = express.Router();
 const Consumible = require('../models/Consumible');
 
+const normalizar = (value) => String(value || '').trim().replace(/\s+/g, ' ');
+const key = (value) => normalizar(value).toLowerCase();
+
+const construirPayload = (body) => {
+  const stockRecibido = body.stock ?? body.cantidad ?? 0;
+  return {
+    nombre: normalizar(body.nombre),
+    categoria: normalizar(body.categoria),
+    stock: Number(stockRecibido),
+    unidad: normalizar(body.unidad || 'piezas'),
+    descripcion: normalizar(body.descripcion),
+    marca: normalizar(body.marca),
+    ubicacionActual: normalizar(body.ubicacionActual),
+    stockMinimo: Number(body.stockMinimo || 0)
+  };
+};
+
 // Obtener todos los consumibles
 router.get('/', async (req, res) => {
   try {
@@ -26,14 +43,21 @@ router.get('/:id', async (req, res) => {
 // Crear consumible
 router.post('/', async (req, res) => {
   try {
-    const { nombre, categoria, stock, unidad, descripcion, marca, ubicacionActual, stockMinimo } = req.body;
-    
-    const existe = await Consumible.findOne({ nombre });
-    if (existe) {
-      return res.status(400).json({ error: 'El consumible ya existe' });
+    const payload = construirPayload(req.body);
+
+    if (!payload.nombre) return res.status(400).json({ error: 'El nombre es requerido' });
+    if (!payload.categoria) return res.status(400).json({ error: 'La categoría es requerida' });
+    if (!payload.unidad) return res.status(400).json({ error: 'La unidad es requerida' });
+    if (Number.isNaN(payload.stock) || payload.stock < 0) {
+      return res.status(400).json({ error: 'La cantidad debe ser un número mayor o igual a 0' });
     }
-    
-    const consumible = new Consumible({ nombre, categoria, stock, unidad, descripcion, marca, ubicacionActual, stockMinimo });
+
+    const existe = await Consumible.findOne({ nombreKey: key(payload.nombre) });
+    if (existe) {
+      return res.status(400).json({ error: 'Ya existe un consumible con ese nombre' });
+    }
+
+    const consumible = new Consumible(payload);
     await consumible.save();
     res.status(201).json({ message: 'Consumible creado', consumible });
   } catch (error) {
@@ -44,7 +68,29 @@ router.post('/', async (req, res) => {
 // Actualizar consumible
 router.put('/:id', async (req, res) => {
   try {
-    const consumible = await Consumible.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const payload = construirPayload(req.body);
+
+    if (!payload.nombre) return res.status(400).json({ error: 'El nombre es requerido' });
+    if (!payload.categoria) return res.status(400).json({ error: 'La categoría es requerida' });
+    if (Number.isNaN(payload.stock) || payload.stock < 0) {
+      return res.status(400).json({ error: 'La cantidad debe ser un número mayor o igual a 0' });
+    }
+
+    const duplicado = await Consumible.findOne({
+      nombreKey: key(payload.nombre),
+      _id: { $ne: req.params.id }
+    });
+
+    if (duplicado) {
+      return res.status(400).json({ error: 'Ya existe otro consumible con ese nombre' });
+    }
+
+    const consumible = await Consumible.findByIdAndUpdate(
+      req.params.id,
+      { ...payload, nombreKey: key(payload.nombre) },
+      { new: true, runValidators: true }
+    );
+
     if (!consumible) return res.status(404).json({ error: 'No existe' });
     res.json({ message: 'Consumible actualizado', consumible });
   } catch (error) {

@@ -17,18 +17,28 @@ export const ticketsApi = axios.create({
   },
 });
 
+const handleApiError = (error, source = 'API') => {
+  const backendMessage =
+    error.response?.data?.error ||
+    error.response?.data?.message ||
+    error.message ||
+    'Error desconocido';
+
+  console.error(`Error en ${source}:`, {
+    status: error.response?.status,
+    message: backendMessage,
+    data: error.response?.data,
+  });
+
+  return Promise.reject(error);
+};
+
 api.interceptors.response.use(
-  response => response,
-  error => {
-    console.error('Error en API:', error.response?.data || error.message);
-    return Promise.reject(error);
-  }
+  (response) => response,
+  (error) => handleApiError(error, 'API')
 );
 
 ticketsApi.interceptors.response.use(
-  response => response,
-  error => {
-    console.error('Error en Tickets API:', error.response?.data || error.message);
-    return Promise.reject(error);
-  }
+  (response) => response,
+  (error) => handleApiError(error, 'Tickets API')
 );

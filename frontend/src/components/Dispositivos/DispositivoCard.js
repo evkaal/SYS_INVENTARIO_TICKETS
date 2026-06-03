@@ -1,23 +1,19 @@
 import React from 'react';
-import { ComputerDesktopIcon, CheckCircleIcon, XCircleIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, ClockIcon, ComputerDesktopIcon, XCircleIcon } from '@heroicons/react/24/outline';
 
 const DispositivoCard = ({ dispositivo }) => {
   const getEstadoIcon = () => {
-    switch(dispositivo.estadoActual) {
-      case 'Disponible': return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
-      case 'Ocupado': return <ComputerDesktopIcon className="w-5 h-5 text-red-500" />;
-      case 'Prestado': return <ClockIcon className="w-5 h-5 text-yellow-500" />;
-      default: return <XCircleIcon className="w-5 h-5 text-gray-500" />;
-    }
+    if (dispositivo.estadoActual === 'Disponible') return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
+    if (dispositivo.estadoActual === 'Prestado') return <ClockIcon className="w-5 h-5 text-yellow-500" />;
+    if (dispositivo.estadoActual === 'Baja') return <XCircleIcon className="w-5 h-5 text-red-500" />;
+    return <ComputerDesktopIcon className="w-5 h-5 text-gray-500" />;
   };
 
   const getEstadoColor = () => {
-    switch(dispositivo.estadoActual) {
-      case 'Disponible': return 'border-l-green-500';
-      case 'Ocupado': return 'border-l-red-500';
-      case 'Prestado': return 'border-l-yellow-500';
-      default: return 'border-l-gray-500';
-    }
+    if (dispositivo.estadoActual === 'Disponible') return 'border-l-green-500';
+    if (dispositivo.estadoActual === 'Prestado') return 'border-l-yellow-500';
+    if (dispositivo.estadoActual === 'Baja') return 'border-l-red-500';
+    return 'border-l-gray-500';
   };
 
   return (
@@ -30,20 +26,15 @@ const DispositivoCard = ({ dispositivo }) => {
         </div>
         {getEstadoIcon()}
       </div>
-      
-      <div className="mt-2">
-        <p className="text-xs text-gray-600">
-          <span className="font-medium">Serie:</span> {dispositivo.numeroSerie}
-        </p>
-        {dispositivo.departamento && (
-          <p className="text-xs text-gray-600 mt-1">
-            <span className="font-medium">Ubicación:</span> {dispositivo.departamento}
-          </p>
+
+      <div className="mt-2 space-y-1">
+        <p className="text-xs text-gray-600"><span className="font-medium">Serie:</span> {dispositivo.numeroSerie}</p>
+        <p className="text-xs text-gray-600"><span className="font-medium">Condición:</span> {dispositivo.condicion || 'En funcionamiento'}</p>
+        {dispositivo.ubicacionActual && (
+          <p className="text-xs text-gray-600"><span className="font-medium">Ubicación:</span> {dispositivo.ubicacionActual}</p>
         )}
         {dispositivo.fechaSalida && (
-          <p className="text-xs text-gray-400 mt-1">
-            Salida: {new Date(dispositivo.fechaSalida).toLocaleDateString()}
-          </p>
+          <p className="text-xs text-gray-400">Salida: {new Date(dispositivo.fechaSalida).toLocaleDateString()}</p>
         )}
       </div>
     </div>
